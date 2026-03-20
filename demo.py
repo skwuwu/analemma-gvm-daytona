@@ -23,12 +23,20 @@ import json
 import os
 import sys
 import time
-from daytona import Daytona, DaytonaConfig, CreateSandboxFromImageParams
+from daytona import Daytona, DaytonaConfig, CreateSandboxFromImageParams, Image
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-IMAGE      = "ghcr.io/skwuwu/analemma-gvm@sha256:40d56438e24d93d8db0a109c30b39219e9661eeaa09a002314b20db5aa67116c"
+_GVM_BASE  = "ghcr.io/skwuwu/analemma-gvm@sha256:40d56438e24d93d8db0a109c30b39219e9661eeaa09a002314b20db5aa67116c"
+# Extend the runtime image with python3 + curl (not in the slim production image)
+IMAGE = (
+    Image.base(_GVM_BASE)
+    .run_commands(
+        "apt-get update && apt-get install -y --no-install-recommends "
+        "python3 python3-pip curl && rm -rf /var/lib/apt/lists/*"
+    )
+)
 PROXY_PORT = 8080
 MOCK_PORT  = 9090
 PROXY_URL  = f"http://127.0.0.1:{PROXY_PORT}"
@@ -69,31 +77,20 @@ def upload(sandbox, path: str, content: str):
 
 
 def wait_for_proxy(sandbox, timeout: int = 40) -> bool:
-    time.sleep(4)
+    # bash /dev/tcp works without curl or python3
+    time.sleep(3)
     deadline = time.time() + timeout
-    attempt = 0
     while time.time() < deadline:
-        attempt += 1
         try:
-            # socket connect
-            sock_out = run(sandbox,
-                f"python3 -c \""
-                f"import socket; s=socket.socket(); s.settimeout(1); "
-                f"r=s.connect_ex(('127.0.0.1',{PROXY_PORT})); s.close(); "
-                f"print('sock:', r)\""
+            out = run(sandbox,
+                f"bash -c '(echo > /dev/tcp/127.0.0.1/{PROXY_PORT}) 2>/dev/null "
+                f"&& echo up || echo down'"
             )
-            # pgrep
-            pgrep_out = run(sandbox, "pgrep -a gvm-proxy 2>/dev/null || echo 'no process'")
-            # proxy log tail
-            log_out = run(sandbox, "tail -3 /tmp/proxy.log 2>/dev/null || echo 'no log'")
-
-            console.print(f"  [dim][wait #{attempt}] sock={sock_out.strip()!r} | pgrep={pgrep_out.strip()!r} | log={log_out.strip()!r}[/dim]")
-
-            if "sock: 0" in sock_out:
+            if "up" in out:
                 return True
-        except Exception as e:
-            console.print(f"  [dim][wait #{attempt}] exception: {e}[/dim]")
-        time.sleep(2)
+        except Exception:
+            pass
+        time.sleep(1)
     return False
 
 
