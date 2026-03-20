@@ -69,17 +69,17 @@ def upload(sandbox, path: str, content: str):
 
 
 def wait_for_proxy(sandbox, timeout: int = 40) -> bool:
-    # Give nohup time to actually fork gvm-proxy before polling
     time.sleep(4)
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            # Check TCP port binding — more reliable than HTTP health check in Daytona
             out = run(sandbox,
-                f"ss -tlnp 2>/dev/null | grep :{PROXY_PORT} | head -1 || "
-                f"netstat -tlnp 2>/dev/null | grep :{PROXY_PORT} | head -1"
+                f"python3 -c \""
+                f"import socket; s=socket.socket(); s.settimeout(1); "
+                f"r=s.connect_ex(('127.0.0.1',{PROXY_PORT})); s.close(); "
+                f"print('up' if r==0 else 'down')\""
             )
-            if str(PROXY_PORT) in out:
+            if "up" in out:
                 return True
         except Exception:
             pass
