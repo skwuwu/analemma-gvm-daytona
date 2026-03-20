@@ -2,21 +2,23 @@
 # Modify freely; hot_reload = true means changes apply without restart.
 
 [[rules]]
-id       = "dev-deny-critical"
-priority = 100
-description = "Block CRITICAL operations — edit or remove for testing"
+id          = "dev-deny-critical"
+priority    = 100
+layer       = "Global"
+description = "Block CRITICAL operations — requires manual approval"
 conditions = [
     { field = "resource.sensitivity", operator = "Eq", value = "Critical" },
 ]
-decision = { type = "Deny" }
-ic_level  = 3
+decision = { type = "Deny", reason = "Critical operations require manual approval" }
+ic_level = 3
 
 [[rules]]
-id       = "dev-allow-medium"
-priority = 10
-description = "Allow Medium sensitivity operations"
+id          = "dev-allow-medium"
+priority    = 10
+layer       = "Global"
+description = "Allow Medium sensitivity operations by default"
 conditions = [
     { field = "resource.sensitivity", operator = "Eq", value = "Medium" },
 ]
 decision = { type = "Allow" }
-ic_level  = 1
+ic_level = 1

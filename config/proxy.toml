@@ -1,5 +1,5 @@
 # GVM proxy config for Daytona dev workspace.
-# Permissive defaults with full logging — development only.
+# Development: permissive defaults with full logging.
 # For production, see: https://github.com/skwuwu/Analemma-GVM/config/proxy.toml
 
 [server]
@@ -7,13 +7,23 @@ listen = "0.0.0.0:8080"
 
 [enforcement]
 # Development: Delay unknown ops instead of Deny, for easier exploration
-default_decision = { type = "Delay", milliseconds = 100 }
+default_decision   = { type = "Delay", milliseconds = 100 }
+ic1_async_ledger   = true
+ic1_loss_threshold = 0.001
 
 [enforcement.on_block]
-deny             = "halt"
-require_approval = "soft_pivot"
-throttle         = "rollback"
+deny                  = "halt"
+require_approval      = "soft_pivot"
+throttle              = "rollback"
 infrastructure_failure = "halt"
+
+[nats]
+url          = "nats://localhost:4222"
+stream       = "gvm-audit"
+max_age_days = 2555
+
+[redis]
+url = "redis://localhost:6379"
 
 [srr]
 network_file  = "config/srr_network.toml"

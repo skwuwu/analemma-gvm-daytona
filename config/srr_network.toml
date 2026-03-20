@@ -1,46 +1,35 @@
 # SRR Network rules — Daytona demo workspace.
 #
 # Scenario 1 & 2 design:
-#   GET  api.stripe.com/*             → Allow   (simulates VPC security group allowlist)
-#   POST api.stripe.com/v1/transfers  → Deny    (GVM catches what VPC can't)
-#   POST api.stripe.com/v1/charges    → Allow   (legitimate payment reads)
-#   Everything else                   → Default-to-Caution (Delay 300ms)
-#
-# VPC sees: api.stripe.com is allowed → passes all traffic.
-# GVM sees: method + path semantics → catches POST /v1/transfers as policy violation.
+#   GET  api.stripe.com/*            → Allow   (simulates VPC security group allowlist)
+#   POST api.stripe.com/v1/transfers → Deny    (GVM catches what VPC can't)
+#   POST api.stripe.com/v1/charges   → Allow   (legitimate payment reads)
+#   Everything else                  → Default-to-Caution (Delay 100ms)
 
 [[rules]]
-id          = "allow-stripe-read"
-priority    = 100
-description = "Allow Stripe read operations (simulates VPC domain allowlist)"
-method      = "GET"
-host_pattern = { type = "Exact", value = "api.stripe.com" }
-path_pattern = { type = "Prefix", value = "/" }
-decision    = { type = "Allow" }
+id       = "allow-stripe-read"
+priority = 100
+method   = "GET"
+pattern  = "api.stripe.com/{any}"
+decision = { type = "Allow" }
 
 [[rules]]
-id          = "allow-stripe-charges"
-priority    = 110
-description = "Allow Stripe charge reads (POST to /v1/charges is legitimate)"
-method      = "POST"
-host_pattern = { type = "Exact", value = "api.stripe.com" }
-path_pattern = { type = "Prefix", value = "/v1/charges" }
-decision    = { type = "Allow" }
+id       = "allow-stripe-charges"
+priority = 110
+method   = "POST"
+pattern  = "api.stripe.com/v1/charges{any}"
+decision = { type = "Allow" }
 
 [[rules]]
-id          = "deny-stripe-transfers"
-priority    = 200
-description = "Block Stripe wire transfers — requires manual approval outside agent scope"
-method      = "POST"
-host_pattern = { type = "Exact", value = "api.stripe.com" }
-path_pattern = { type = "Prefix", value = "/v1/transfers" }
-decision    = { type = "Deny" }
+id       = "deny-stripe-transfers"
+priority = 200
+method   = "POST"
+pattern  = "api.stripe.com/v1/transfers{any}"
+decision = { type = "Deny", reason = "Wire transfer blocked — requires manual approval" }
 
 [[rules]]
-id          = "deny-cloud-metadata"
-priority    = 1000
-description = "SSRF: block cloud metadata endpoint"
-method      = "GET"
-host_pattern = { type = "Exact", value = "169.254.169.254" }
-path_pattern = { type = "Prefix", value = "/" }
-decision    = { type = "Deny" }
+id       = "deny-cloud-metadata"
+priority = 1000
+method   = "GET"
+pattern  = "169.254.169.254/{any}"
+decision = { type = "Deny", reason = "SSRF: cloud metadata endpoint blocked" }
