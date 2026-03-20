@@ -1,0 +1,4 @@
+# SRR Semantic rules — development workspace.
+# Add operation-level routing restrictions here.
+
+rules = []

@@ -1,0 +1,22 @@
+# Global policy — dev workspace starter.
+# Modify freely; hot_reload = true means changes apply without restart.
+
+[[rules]]
+id       = "dev-deny-critical"
+priority = 100
+description = "Block CRITICAL operations — edit or remove for testing"
+conditions = [
+    { field = "resource.sensitivity", operator = "Eq", value = "Critical" },
+]
+decision = { type = "Deny" }
+ic_level  = 3
+
+[[rules]]
+id       = "dev-allow-medium"
+priority = 10
+description = "Allow Medium sensitivity operations"
+conditions = [
+    { field = "resource.sensitivity", operator = "Eq", value = "Medium" },
+]
+decision = { type = "Allow" }
+ic_level  = 1

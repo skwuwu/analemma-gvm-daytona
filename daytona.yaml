@@ -1,0 +1,31 @@
+# Daytona workspace definition for Analemma GVM.
+#
+# Usage:
+#   daytona create https://github.com/skwuwu/analemma-gvm-daytona
+#
+# Or with Daytona CLI pointing at your self-hosted instance:
+#   daytona create --server-url https://your-daytona.example.com \
+#                  https://github.com/skwuwu/analemma-gvm-daytona
+
+name: analemma-gvm
+image: ghcr.io/skwuwu/analemma-gvm:latest
+
+# Forward proxy port to host
+ports:
+  - port: 8080
+    protocol: http
+    name: gvm-proxy
+
+# Mounted volume for WAL persistence across workspace restarts
+volumes:
+  - name: gvm-data
+    mountPath: /app/data
+
+# Run after workspace is created
+postCreateCommands:
+  - bash /workspaces/scripts/setup.sh
+
+# Environment — set GVM_SECRETS_KEY via Daytona secrets management
+environment:
+  GVM_CONFIG: /app/config/proxy.toml
+  GVM_ENV: development

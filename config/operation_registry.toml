@@ -1,0 +1,4 @@
+# Operation registry — maps operation names to vendor/capability metadata.
+# Leave empty to allow all operations (dev default).
+# For production examples, see: https://github.com/skwuwu/Analemma-GVM/config/
+

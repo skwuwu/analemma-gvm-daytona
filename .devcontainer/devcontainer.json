@@ -1,0 +1,41 @@
+{
+  "name": "Analemma GVM",
+
+  // Pre-built runtime image — gvm-proxy and gvm-cli already installed.
+  // For source development, swap to the builder stage or use a Rust devcontainer.
+  "image": "ghcr.io/skwuwu/analemma-gvm:latest",
+
+  "forwardPorts": [8080],
+  "portsAttributes": {
+    "8080": {
+      "label": "GVM Proxy",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "postCreateCommand": "bash /workspaces/scripts/setup.sh",
+  "postStartCommand": "echo 'Run: make start  to start the proxy'",
+
+  "remoteUser": "root",
+
+  "mounts": [
+    // Persist WAL and config across rebuilds
+    "source=gvm-data,target=/app/data,type=volume"
+  ],
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "ms-vscode.hexeditor"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "files.associations": {
+          "*.toml": "toml"
+        }
+      }
+    }
+  }
+}
