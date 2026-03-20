@@ -1,2 +1,2 @@
-requests>=2.31.0
+daytona>=0.153.0
 rich>=13.7.0
