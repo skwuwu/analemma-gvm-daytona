@@ -68,15 +68,22 @@ def upload(sandbox, path: str, content: str):
     sandbox.fs.upload_file(content.encode("utf-8"), path)
 
 
-def wait_for_proxy(sandbox, timeout: int = 25) -> bool:
+def wait_for_proxy(sandbox, timeout: int = 40) -> bool:
+    # Give nohup time to actually fork the process before polling
+    time.sleep(3)
     deadline = time.time() + timeout
     while time.time() < deadline:
-        out = run(sandbox,
-            f"curl -sf {PROXY_URL}/gvm/health -o /dev/null -w '%{{http_code}}' 2>/dev/null || echo 000"
-        )
-        if out.strip() in ("200", "404"):
-            return True
-        time.sleep(0.5)
+        try:
+            # Use -s (no -f) so curl doesn't fail on 4xx — we just want the status code
+            out = run(sandbox,
+                f"curl -s {PROXY_URL}/gvm/health -o /dev/null -w '%{{http_code}}' 2>/dev/null || echo 000"
+            )
+            code = out.strip()
+            if code and code not in ("000", ""):
+                return True
+        except Exception:
+            pass
+        time.sleep(1)
     return False
 
 
