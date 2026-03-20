@@ -1,67 +1,81 @@
-# Analemma GVM — Daytona Workspace
+# Analemma GVM — Daytona Demo
 
-Development environment for integrating and testing the [Analemma GVM](https://github.com/skwuwu/Analemma-GVM) governance proxy.
+Three governance scenarios that show what VPC firewalls miss.
+Runs on [Daytona Cloud](https://app.daytona.io) — no local setup beyond a Daytona account.
 
-Opens in a pre-configured workspace with `gvm-proxy` and `gvm-cli` already installed.
-Policy changes reload live — no restart needed.
+## What you'll see
+
+| Scenario | What happens |
+|----------|-------------|
+| 1. Semantic Forgery | Agent declares `gvm.payment.read`, sends `POST /v1/transfers`. VPC passes (domain allowed). GVM detects method/path mismatch → 403 Deny. |
+| 2. Batch Forensics | 100 calls, 3 injected forgeries. WAL records every decision. Merkle chain verifies audit integrity. |
+| 3. API Key Isolation | Stripe key never reaches agent process. GVM injects post-enforcement. `--sandbox` blocks credential exfiltration at syscall level. |
 
 ## Quick Start
 
+### Daytona Cloud (recommended)
+
 ```bash
-# Open in Daytona
+daytona login
 daytona create https://github.com/skwuwu/analemma-gvm-daytona
-
-# Inside the workspace — set your secrets key and start the proxy
-export GVM_SECRETS_KEY=$(openssl rand -hex 16)
-make start
-
-# Test governance decisions
-make check-deny    # CRITICAL → 403 Deny
-make check-allow   # Medium   → 200 Allow
-
-# Watch audit trail
-make tail-wal
 ```
 
-## Workspace Structure
+Inside the workspace (two terminals):
+
+```bash
+# Terminal 1 — start proxy
+make start
+
+# Terminal 2 — run demo
+make demo
+```
+
+Total time: ~3 minutes.
+
+### Local
+
+Requires [Daytona CLI](https://www.daytona.io/docs/installation/installation/) installed locally.
+
+```bash
+daytona create https://github.com/skwuwu/analemma-gvm-daytona
+# workspace opens; same two-terminal flow above
+```
+
+## Workspace layout
 
 ```
 .devcontainer/
-  devcontainer.json     # VS Code / Daytona devcontainer config
-daytona.yaml            # Daytona workspace definition
+  devcontainer.json     # installs gvm-proxy + gvm-cli, mounts config/
 config/
-  proxy.toml            # Proxy config (hot_reload enabled)
-  global.toml           # Top-level policy (edit without restart)
-  srr_network.toml      # Network routing rules
-  srr_semantic.toml     # Semantic operation rules
-  secrets.toml          # API credentials (add your own — do not commit)
-  operation_registry.toml
+  proxy.toml            # proxy config (hot_reload enabled)
+  srr_network.toml      # network rules: GET stripe → Allow, POST transfers → Deny
+  secrets.toml          # API credentials (held by proxy, never exposed to agent)
   policies/
-    global.toml         # Policy file (hot_reload watches this directory)
-scripts/
-  setup.sh              # Runs once at workspace creation
-Makefile                # Dev shortcuts (make help for full list)
+    global.toml         # ABAC policy
+Makefile                # make help for full target list
+demo.py                 # demo script (Python, requests + rich)
 ```
 
-## Editing Policies
+## Editing rules live
 
-Policy files are hot-reloaded. Edit and save — the proxy picks up changes within 1 second:
+Policy files hot-reload — edit and save, proxy picks up changes within 1 second:
 
 ```bash
-# Example: deny all PII access
-cat >> config/policies/global.toml << 'EOF'
+# Example: block all POST to a new endpoint
+cat >> config/srr_network.toml << 'EOF'
 
 [[rules]]
-id       = "deny-pii"
-priority = 90
-conditions = [{ field = "resource.sensitivity", operator = "Eq", value = "PII" }]
-decision  = { type = "Deny" }
-ic_level  = 3
+id          = "deny-example"
+priority    = 150
+method      = "POST"
+host_pattern = { type = "Exact", value = "api.example.com" }
+path_pattern = { type = "Prefix", value = "/v1/withdraw" }
+decision    = { type = "Deny" }
 EOF
-# No restart needed
+# No restart needed — make check-deny to verify
 ```
 
-## Core Repository
+## Core repository
 
-Source: [skwuwu/Analemma-GVM](https://github.com/skwuwu/Analemma-GVM)
+Source and docs: [skwuwu/Analemma-GVM](https://github.com/skwuwu/Analemma-GVM)
 Docker image: `ghcr.io/skwuwu/analemma-gvm:latest`
