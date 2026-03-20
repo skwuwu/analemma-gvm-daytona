@@ -71,19 +71,29 @@ def upload(sandbox, path: str, content: str):
 def wait_for_proxy(sandbox, timeout: int = 40) -> bool:
     time.sleep(4)
     deadline = time.time() + timeout
+    attempt = 0
     while time.time() < deadline:
+        attempt += 1
         try:
-            out = run(sandbox,
+            # socket connect
+            sock_out = run(sandbox,
                 f"python3 -c \""
                 f"import socket; s=socket.socket(); s.settimeout(1); "
                 f"r=s.connect_ex(('127.0.0.1',{PROXY_PORT})); s.close(); "
-                f"print('up' if r==0 else 'down')\""
+                f"print('sock:', r)\""
             )
-            if "up" in out:
+            # pgrep
+            pgrep_out = run(sandbox, "pgrep -a gvm-proxy 2>/dev/null || echo 'no process'")
+            # proxy log tail
+            log_out = run(sandbox, "tail -3 /tmp/proxy.log 2>/dev/null || echo 'no log'")
+
+            console.print(f"  [dim][wait #{attempt}] sock={sock_out.strip()!r} | pgrep={pgrep_out.strip()!r} | log={log_out.strip()!r}[/dim]")
+
+            if "sock: 0" in sock_out:
                 return True
-        except Exception:
-            pass
-        time.sleep(1)
+        except Exception as e:
+            console.print(f"  [dim][wait #{attempt}] exception: {e}[/dim]")
+        time.sleep(2)
     return False
 
 
