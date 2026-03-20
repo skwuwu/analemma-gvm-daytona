@@ -69,17 +69,17 @@ def upload(sandbox, path: str, content: str):
 
 
 def wait_for_proxy(sandbox, timeout: int = 40) -> bool:
-    # Give nohup time to actually fork the process before polling
-    time.sleep(3)
+    # Give nohup time to actually fork gvm-proxy before polling
+    time.sleep(4)
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            # Use -s (no -f) so curl doesn't fail on 4xx — we just want the status code
+            # Check TCP port binding — more reliable than HTTP health check in Daytona
             out = run(sandbox,
-                f"curl -s {PROXY_URL}/gvm/health -o /dev/null -w '%{{http_code}}' 2>/dev/null || echo 000"
+                f"ss -tlnp 2>/dev/null | grep :{PROXY_PORT} | head -1 || "
+                f"netstat -tlnp 2>/dev/null | grep :{PROXY_PORT} | head -1"
             )
-            code = out.strip()
-            if code and code not in ("000", ""):
+            if str(PROXY_PORT) in out:
                 return True
         except Exception:
             pass
