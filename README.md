@@ -3,6 +3,14 @@
 Five governance scenarios that show what VPC firewalls and agent frameworks miss.
 Runs on [Daytona Cloud](https://app.daytona.io) — one script, no local setup.
 
+## Demo
+
+<!-- Replace ZIE9Wr3sBWgRTkZ7 with the actual recording ID after upload -->
+[![asciicast](https://asciinema.org/a/ZIE9Wr3sBWgRTkZ7.svg)](https://asciinema.org/a/ZIE9Wr3sBWgRTkZ7)
+
+> Recorded on a live Daytona cloud sandbox using the maintainer's personal API key and account.
+> No mock — the proxy, WAL, and policy engine are all running in-sandbox.
+
 ## What you'll see
 
 | # | Scenario | Tier | What happens |

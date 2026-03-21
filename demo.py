@@ -23,6 +23,10 @@ import json
 import os
 import sys
 import time
+
+from dotenv import load_dotenv
+load_dotenv()
+
 from daytona import Daytona, DaytonaConfig, CreateSandboxFromImageParams, Image
 from rich.console import Console
 from rich.panel import Panel
