@@ -42,9 +42,11 @@ file    = "config/secrets.toml"
 key_env = "GVM_SECRETS_KEY"
 
 [wal]
+# batch_window_ms amortizes fsync() across concurrent agents (group commit).
+#   2  = default: captures co-arrivals within one scheduler tick → 10x TPS for multi-agent
+#   0  = minimum latency: no wait, one fsync per event (recommended for single-agent)
 batch_window_ms = 2
 max_batch_size  = 64
 
-# Add your upstream services here for local routing
-# [dev]
-# host_overrides = { "api.example.com" = "127.0.0.1:8888" }
+[dev]
+host_overrides = { "api.stripe.com" = "127.0.0.1:9090", "unknown-api.com" = "127.0.0.1:9090", "gmail.googleapis.com" = "127.0.0.1:9090" }

@@ -1,0 +1,53 @@
+{
+  "platform": "daytona",
+  "timestamp": "2026-03-21T03:49:23Z",
+  "sandbox_image": "ghcr.io/skwuwu/analemma-gvm@sha256:40d56438e24d93d8db0a109c30b39219e9661eeaa09a002314b20db5aa67116c",
+  "n_warmup": 10,
+  "n_bench": 50,
+  "delay_floor_ms": 100,
+  "deny_url": "http://api.stripe.com/v1/transfers",
+  "results": {
+    "direct": {
+      "n": 50,
+      "min": 0.171,
+      "p50": 0.179,
+      "p95": 0.19,
+      "p99": 0.194,
+      "max": 0.2,
+      "mean": 0.179
+    },
+    "gvm_allow": {
+      "n": 50,
+      "min": 0.426,
+      "p50": 0.454,
+      "p95": 0.495,
+      "p99": 0.61,
+      "max": 0.643,
+      "mean": 0.463
+    },
+    "gvm_delay": {
+      "n": 50,
+      "min": 307.807,
+      "p50": 309.911,
+      "p95": 310.28,
+      "p99": 310.535,
+      "max": 314.684,
+      "mean": 309.649
+    },
+    "gvm_deny": {
+      "n": 50,
+      "min": 3.331,
+      "p50": 3.846,
+      "p95": 4.739,
+      "p99": 5.498,
+      "max": 10.529,
+      "mean": 4.008
+    }
+  },
+  "overhead": {
+    "allow_vs_direct_ms": 0.284,
+    "deny_vs_direct_ms": 3.829,
+    "delay_above_floor_ms": 209.47,
+    "deny_vs_allow_ms": 3.545
+  }
+}

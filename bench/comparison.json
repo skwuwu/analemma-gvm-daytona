@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-03-21T03:49:23Z",
+  "batch_window_2ms": {
+    "deny_mean": 4.008,
+    "deny_p50": 3.846,
+    "deny_p99": 5.498
+  },
+  "batch_window_0ms": {
+    "deny_mean": 3.791,
+    "deny_p50": 3.834,
+    "deny_p99": 4.139
+  },
+  "overhead_2ms": 3.829,
+  "overhead_0ms": 3.612,
+  "speedup": 1.06
+}
