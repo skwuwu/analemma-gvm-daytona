@@ -3,7 +3,7 @@ Analemma GVM — Daytona Demo (5 Scenarios)
 ==========================================
 
 Tier 1 (no SDK, HTTP_PROXY only):
-  Scenario 1: API key theft prevention
+  Scenario 1: API key isolation
   Scenario 2: Graduated enforcement (Allow / Delay / Deny)
   Scenario 3: Tamper-evident audit log (Merkle verification)
 
@@ -144,14 +144,16 @@ def write_config(sandbox):
         upload(sandbox, dst, open(src, encoding="utf-8").read())
 
 
-# ── Scenario 1: API Key Theft Prevention ──────────────────────────────────
+# ── Scenario 1: API Key Isolation ──────────────────────────────────────────
 
 def scenario_1(sandbox):
-    banner("Scenario 1: API Key Theft Prevention", "Tier 1")
+    banner("Scenario 1: API Key Isolation", "Tier 1")
     console.print(
-        "[dim]Agent env has NO STRIPE_KEY. GVM proxy holds the credential.\n"
-        "Agent sends a request without auth → proxy injects key → upstream receives it.\n"
-        "Agent can never read the key it just used.[/dim]\n"
+        "[dim]Daytona's network filtering operates at the domain level — but if the domain\n"
+        "is allowed, the agent can read any key in its env and exfiltrate it via the\n"
+        "allowed channel. GVM removes the key from the agent env entirely. The proxy\n"
+        "holds it and injects it post-enforcement. The agent uses the key but can\n"
+        "never see it.[/dim]\n"
     )
 
     no_key = run(sandbox, "echo STRIPE_KEY=${STRIPE_KEY:-<not set>}")
@@ -166,7 +168,7 @@ def scenario_1(sandbox):
     console.print(f"  Upstream received Authorization: [green]{injected}[/green]")
     console.print(
         "\n  [bold green]Result:[/bold green] Agent made the call. "
-        "Agent never touched the key. GVM injected it post-enforcement."
+        "Agent never touched the key. Structural isolation, not access control."
     )
 
 
@@ -175,8 +177,11 @@ def scenario_1(sandbox):
 def scenario_2(sandbox):
     banner("Scenario 2: Graduated Enforcement", "Tier 1")
     console.print(
-        "[dim]Three requests, three different decisions.\n"
-        "Not allow/deny binary — Allow / Delay / Deny from one proxy.[/dim]\n"
+        "[dim]Daytona's network filtering operates at the domain level — allow or deny\n"
+        "the entire domain. GVM operates at method + path level within a single\n"
+        "allowed domain. GET api.stripe.com/charges → Allow.\n"
+        "POST api.stripe.com/transfers → Deny. Same domain, different decision.\n"
+        "Domain-level filtering cannot do this.[/dim]\n"
     )
 
     cases = [

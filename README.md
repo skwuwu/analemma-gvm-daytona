@@ -15,8 +15,8 @@ Runs on [Daytona Cloud](https://app.daytona.io) — one script, no local setup.
 
 | # | Scenario | Tier | What happens |
 |---|----------|------|-------------|
-| 1 | API Key Theft Prevention | Tier 1 | Stripe key never reaches agent env. GVM injects post-enforcement. Agent can never read the key it used. |
-| 2 | Graduated Enforcement | Tier 1 | Allow / Delay / Deny from one proxy. Not binary — SRR rules route by method + path. |
+| 1 | API Key Isolation | Tier 1 | Agent env has no key. GVM proxy holds it and injects post-enforcement. Agent uses the key but can never see it — structural isolation, not access control. |
+| 2 | Graduated Enforcement | Tier 1 | Same allowed domain, different decision by method + path. `GET /charges` → Allow, `POST /transfers` → Deny. Domain-level filtering cannot do this. |
 | 3 | Tamper-Evident Audit Log | Tier 1 | WAL is Merkle-chained. Tamper one entry → `gvm audit verify` reports `TAMPER DETECTED`. |
 | 4 | Agent Forgery Detection | Tier 2 | `@ic(operation='gvm.storage.read')` but sends `POST /v1/transfers`. `max_strict(Allow, Deny) = Deny`. |
 | 5 | Deny → Auto-Checkpoint Rollback | Tier 2 | Wire transfer denied → rollback to last checkpoint. ~210 tokens to recover vs ~1160 for full restart. |
